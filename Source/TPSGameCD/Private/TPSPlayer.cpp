@@ -6,7 +6,9 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "../../../../../../../Source/Runtime/Engine/Classes/Components/SkeletalMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "BulletActor.h"
+#include "../../../../../../../Source/Runtime/UMG/Public/Blueprint/UserWidget.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -48,12 +50,35 @@ ATPSPlayer::ATPSPlayer()
 		gunMeshComp->SetSkeletalMesh( tempGunMesh.Object );
 		gunMeshComp->SetRelativeLocation(FVector(0, 50, 130));
 	}
+
+	// sniperMeshComp(UStaticMeshComponent)를 생성해서 메쉬에 붙이고싶다.
+	sniperMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("sniperMeshComp"));
+	sniperMeshComp->SetupAttachment(GetMesh());
+	// UStaticMesh를 로드해서 적용하고싶다.
+	ConstructorHelpers::FObjectFinder<UStaticMesh> tempSniper(TEXT("/Script/Engine.StaticMesh'/Game/Models/SniperGun/sniper1.sniper1'"));
+
+	if (tempSniper.Succeeded())
+	{
+		sniperMeshComp->SetStaticMesh(tempSniper.Object);
+		sniperMeshComp->SetRelativeLocation(FVector(0, 80, 130));
+		sniperMeshComp->SetWorldScale3D(FVector(0.15f));
+	}
+
+	gunMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	sniperMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	crossHairUI = CreateWidget(GetWorld(), crossHairFactory);
+	crossHairUI->AddToViewport();
+
+	sniperUI = CreateWidget( GetWorld(), sniperFactory);
+	sniperUI->AddToViewport();
+
+	OnActionChooseGrenadeGun();
 }
 
 // Called every frame
@@ -82,6 +107,13 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAxis(TEXT("Look Up / Down Mouse"), this, &ATPSPlayer::OnAxisLookupPitch);
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ATPSPlayer::OnActionJump);
+
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &ATPSPlayer::OnActionFire );
+
+	PlayerInputComponent->BindAction(TEXT("ChooseGrenadeGun"), IE_Pressed, this, &ATPSPlayer::OnActionChooseGrenadeGun);
+
+	PlayerInputComponent->BindAction(TEXT("ChooseSniperGun"), IE_Pressed, this, &ATPSPlayer::OnActionChooseSniperGun);
+
 }
 
 void ATPSPlayer::Move()
@@ -113,5 +145,25 @@ void ATPSPlayer::OnAxisLookupPitch( float value )
 void ATPSPlayer::OnActionJump()
 {
 	Jump();
+}
+
+void ATPSPlayer::OnActionFire()
+{
+	FTransform t = gunMeshComp->GetSocketTransform(TEXT("FirePosition"));
+	GetWorld()->SpawnActor<ABulletActor>(bulletFactory, t);
+}
+
+void ATPSPlayer::OnActionChooseGrenadeGun()
+{
+	// 유탄총을 보이게, 스나이퍼를 안보이게
+	gunMeshComp->SetVisibility(true);
+	sniperMeshComp->SetVisibility(false);
+}
+
+void ATPSPlayer::OnActionChooseSniperGun()
+{
+	// 유탄총을 안보이게, 스나이퍼를 보이게
+	gunMeshComp->SetVisibility(false);
+	sniperMeshComp->SetVisibility(true);
 }
 

@@ -46,6 +46,33 @@ public:
 
 
 	// 총 메시를 추가하고싶다.
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class USkeletalMeshComponent* gunMeshComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class UStaticMeshComponent* sniperMeshComp;
+
+	// 총알공장을 만들고싶다.
+	// 마우스 왼쪽 버튼을 누르면 총알공장에서 총알을만들어서 FirePosition소켓에 배치하고싶다.
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ABulletActor> bulletFactory;
+
+	void OnActionFire();
+
+	void OnActionChooseGrenadeGun();
+	void OnActionChooseSniperGun();
+
+public:
+	UPROPERTY( EditAnywhere )
+	TSubclassOf<class UUserWidget> crossHairFactory;
+
+	UPROPERTY( EditAnywhere )
+	TSubclassOf<class UUserWidget> sniperFactory;
+
+	UPROPERTY()
+	class UUserWidget* crossHairUI;
+
+	UPROPERTY()
+	class UUserWidget* sniperUI;
 };
