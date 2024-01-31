@@ -29,7 +29,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* springArmComp;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UCameraComponent* cameraComp;
 
 	FVector direction;
@@ -75,4 +75,15 @@ public:
 
 	UPROPERTY()
 	class UUserWidget* sniperUI;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float targetFOV = 90;
+
+	void Zoom();
+
+	void OnActionZoomIn();
+	void OnActionZoomOut();
+
+	/// <summary> true : sniper, false : grenade </summary>
+	bool bChooseSniperGun = false;	
 };
