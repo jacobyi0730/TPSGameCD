@@ -9,6 +9,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "BulletActor.h"
 #include "../../../../../../../Source/Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "DrawDebugHelpers.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -158,8 +159,43 @@ void ATPSPlayer::OnActionJump()
 
 void ATPSPlayer::OnActionFire()
 {
-	FTransform t = gunMeshComp->GetSocketTransform( TEXT( "FirePosition" ) );
-	GetWorld()->SpawnActor<ABulletActor>( bulletFactory , t );
+	// 만약 스나이퍼가 아니라면
+	if (false == bChooseSniperGun)
+	{
+		FTransform t = gunMeshComp->GetSocketTransform( TEXT( "FirePosition" ) );
+		GetWorld()->SpawnActor<ABulletActor>( bulletFactory , t );
+	}
+	// 그렇지 않다면 LineTrace...
+	else
+	{
+		FHitResult outHit;
+		FVector start = cameraComp->GetComponentLocation();
+		FVector end = start + cameraComp->GetForwardVector() * 100000;
+		FCollisionQueryParams params;
+		params.AddIgnoredActor(this);
+
+		bool bReturnValue = GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECollisionChannel::ECC_Visibility, params);
+
+		// 만약 부딪힌 것이 있다면
+		if (bReturnValue)
+		{
+			DrawDebugLine(GetWorld(), outHit.TraceStart, outHit.ImpactPoint, FColor::Red, false, 10);
+			// 부딪힌 컴포넌트를 가져와서
+			UPrimitiveComponent* hitComp = outHit.GetComponent();
+			// 만약 컴포넌트가 있다 그리고 컴포넌트의 물리가 켜져있다면
+			if (hitComp && hitComp->IsSimulatingPhysics())
+			{
+				// 그 컴포넌트에게 힘을 가하고싶다.
+				FVector dir = end - start;
+				hitComp->AddForce(dir.GetSafeNormal() * 500000 * hitComp->GetMass());
+			}
+		}
+		//// 허공
+		//else
+		//{
+		//	DrawDebugLine( GetWorld() , start , end , FColor::Cyan , false , 10 );
+		//}
+	}
 }
 
 void ATPSPlayer::OnActionChooseGrenadeGun()
