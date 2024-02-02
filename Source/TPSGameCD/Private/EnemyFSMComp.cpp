@@ -3,6 +3,7 @@
 
 #include "EnemyFSMComp.h"
 #include "Enemy.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values for this component's properties
 UEnemyFSMComp::UEnemyFSMComp()
@@ -50,7 +51,7 @@ void UEnemyFSMComp::TickIdle()
 	if (target)
 	{
 		// 3. 이동상태로 전이하고싶다. -> state의 값을 MOVE로 바꾸고싶다.
-		state = EEnemyState::MOVE;
+		SetState( EEnemyState::MOVE );
 	}
 }
 
@@ -60,27 +61,99 @@ void UEnemyFSMComp::TickMove()
 	// 0. 목적지를 향하는 방향을 구하고싶다.
 	FVector dir = target->GetActorLocation() - me->GetActorLocation();
 	// 1. me가 그 방향으로 이동하게 하고싶다.
-	me->AddMovementInput(dir.GetSafeNormal());
+	me->AddMovementInput( dir.GetSafeNormal() );
 	// 2. 목적지와의 거리를 기억하고싶다.
-	float dist = target->GetDistanceTo(me);
+	float dist = target->GetDistanceTo( me );
 	// 3. 만약 목적지와의 거리가 attackDist보다 작다면
 	if (dist < attackDist)
 	{
 		// 4. 공격상태로 전이하고싶다.
-		state = EEnemyState::ATTACK;
+		SetState( EEnemyState::ATTACK );
 	}
 }
 
-// Attack : 2초 대기했다가 공격을 하고 싶다. 만약 공격을 하려고할때 목적지와의 거리가 3M를 초과한다면 이동상태로 전이하고싶다.
 void UEnemyFSMComp::TickAttack()
 {
+	// 1. 시간이 흐르다가 
+	currentTime += GetWorld()->GetDeltaSeconds();
+	// 2. 만약 현재시간이 > 공격대기시간을 초과하면
+	if (currentTime > attackWaitTime)
+	{
+		// 3. 현재시간을 초기화 하고싶다.
+		currentTime = 0;
+		// 4. 목적지와의 거리를 재고
+		float distance = target->GetDistanceTo( me );
+		// 5. 만약 그 거리가 공격가능거리를 초과한다면
+		if (distance > attackDist)
+		{
+			// 6.   이동상태로 전이하고싶다.
+			SetState( EEnemyState::MOVE );
+		}
+		else // 7. 그렇지 않다면
+		{
+			// 8.   공격을 하고싶다.
+			UE_LOG( LogTemp , Warning , TEXT( "Enemy->Player Attack!!!" ) );
+			GEngine->AddOnScreenDebugMessage( -1 , 3 , FColor::Cyan , TEXT( "Enemy->Player Attack!!!" ) );
+		}
+	}
 }
 
 void UEnemyFSMComp::TickDamage()
 {
+	// 시간이 흐르다가
+	currentTime += GetWorld()->GetDeltaSeconds();
+	// 현재시간이 1초가 되면 
+	if (currentTime > 1)
+	{
+		// 이동상태로 전이하고싶다.
+		SetState( EEnemyState::MOVE );
+		me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::QueryAndPhysics );
+	}
 }
 
 void UEnemyFSMComp::TickDie()
 {
+	// 아래로 이동하고싶다.
+	float deltaTime = GetWorld()->GetDeltaSeconds();
+	FVector P0 = me->GetActorLocation();
+	FVector velocity = FVector::DownVector * 500;
+	me->SetActorLocation( P0 + velocity * deltaTime );
+	
+	// 시간이 흐르다가
+	currentTime += deltaTime;
+	// 2초가 되면
+	if (currentTime > 2)
+	{
+		// 스스로 파괴하고싶다.
+		me->Destroy();
+	}
+}
+
+void UEnemyFSMComp::TakeDamage( int damage )
+{
+	// 체력을 damage만큼 줄이고싶다.
+	me->hp -= damage;
+	if (me->hp < 0)
+	{
+		me->hp = 0;
+	}
+	// 만약 체력이 0보다 크다면 Damage상태로 전이하고싶다.
+	if (me->hp > 0)
+	{
+		SetState( EEnemyState::DAMAGE );
+	}
+	// 그렇지않다면(체력이 0이하라면) Die상태로 전이하고싶다.
+	else
+	{
+		SetState( EEnemyState::DIE );
+	}
+	// 충돌체를 끄고싶다.
+	me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::NoCollision );
+}
+
+void UEnemyFSMComp::SetState( EEnemyState next )
+{
+	state = next;
+	currentTime = 0;
 }
 

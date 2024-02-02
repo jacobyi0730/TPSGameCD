@@ -10,6 +10,9 @@
 #include "BulletActor.h"
 #include "../../../../../../../Source/Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "Enemy.h"
+#include "EnemyFSMComp.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -189,12 +192,20 @@ void ATPSPlayer::OnActionFire()
 				FVector dir = end - start;
 				hitComp->AddForce(dir.GetSafeNormal() * 500000 * hitComp->GetMass());
 			}
+
+			// 부딪힌 곳에 expVFX를 생성해서 배치하고싶다.
+			UGameplayStatics::SpawnEmitterAtLocation( GetWorld() , expVFX , outHit.ImpactPoint );
+
+			// 만약 부딪힌것이 AEnemy라면
+			// 적에게 데미지 1점을 주고싶다. 
+			AEnemy* enemy = Cast<AEnemy>(outHit.GetActor());
+			if (enemy)
+			{
+				//auto fsm = Cast<UEnemyFSMComp>(enemy->GetDefaultSubobjectByName(TEXT("enemyFSM")));
+				//fsm->TakeDamage(1);
+				enemy->OnMyTakeDamage(1);
+			}
 		}
-		//// 허공
-		//else
-		//{
-		//	DrawDebugLine( GetWorld() , start , end , FColor::Cyan , false , 10 );
-		//}
 	}
 }
 

@@ -31,4 +31,10 @@ public:
 	// EnemyFSMComp를 컴포넌트로 갖고싶다.
 	UPROPERTY(EditAnywhere)
 	class UEnemyFSMComp* enemyFSM;
+
+
+	void OnMyTakeDamage( int damage );
+
+	UPROPERTY(EditAnywhere)
+	int32 hp = 2;
 };

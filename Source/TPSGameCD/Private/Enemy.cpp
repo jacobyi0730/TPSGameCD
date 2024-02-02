@@ -44,3 +44,8 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+void AEnemy::OnMyTakeDamage( int damage )
+{
+	enemyFSM->TakeDamage( damage );
+}
+
