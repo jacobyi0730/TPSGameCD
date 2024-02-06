@@ -16,6 +16,8 @@ class TPSGAMECD_API UTPSPlayerAnim : public UAnimInstance
 	
 public:
 
+	virtual void NativeUpdateAnimation( float DeltaSeconds ) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isCrouched;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

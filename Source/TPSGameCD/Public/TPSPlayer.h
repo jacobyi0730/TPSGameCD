@@ -93,4 +93,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isCrouched;
+
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* fireMontage;
+
+	UPROPERTY(EditAnywhere)
+	class USoundBase* fireSFX;
+
+	void OnActionRunPressed();
+	void OnActionRunReleased();
+
+	void OnActionCrouched();
 };
