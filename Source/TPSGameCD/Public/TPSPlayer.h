@@ -90,4 +90,7 @@ public:
 	// 스나이퍼 총을 쐈을 때 부딪힌곳에 자국을 남기고싶다.
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* expVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isCrouched;
 };

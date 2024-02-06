@@ -8,7 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "BulletActor.h"
-#include "../../../../../../../Source/Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Enemy.h"
@@ -45,7 +45,7 @@ ATPSPlayer::ATPSPlayer()
 
 	// gunMeshComp를 생성해서 로딩도하고 배치하고싶다. Mesh에 붙이고싶다.
 	gunMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>( TEXT( "gunMeshComp" ) );
-	gunMeshComp->SetupAttachment( GetMesh() );
+	gunMeshComp->SetupAttachment( GetMesh(), TEXT("hand_rSocket"));
 
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempGunMesh( TEXT( "/Script/Engine.SkeletalMesh'/Game/Models/FPWeapon/Mesh/SK_FPGun.SK_FPGun'" ) );
 
@@ -57,7 +57,7 @@ ATPSPlayer::ATPSPlayer()
 
 	// sniperMeshComp(UStaticMeshComponent)를 생성해서 메쉬에 붙이고싶다.
 	sniperMeshComp = CreateDefaultSubobject<UStaticMeshComponent>( TEXT( "sniperMeshComp" ) );
-	sniperMeshComp->SetupAttachment( GetMesh() );
+	sniperMeshComp->SetupAttachment( GetMesh(), TEXT("hand_rSocket"));
 	// UStaticMesh를 로드해서 적용하고싶다.
 	ConstructorHelpers::FObjectFinder<UStaticMesh> tempSniper( TEXT( "/Script/Engine.StaticMesh'/Game/Models/SniperGun/sniper1.sniper1'" ) );
 
