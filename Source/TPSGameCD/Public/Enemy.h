@@ -29,7 +29,7 @@ public:
 
 	// Mesh를 설정하고싶다.
 	// EnemyFSMComp를 컴포넌트로 갖고싶다.
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UEnemyFSMComp* enemyFSM;
 
 	void OnMyTakeDamage( int damage );

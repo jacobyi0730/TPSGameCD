@@ -137,6 +137,9 @@ void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT( "ActionRun" ), IE_Released , this , &ATPSPlayer::OnActionRunReleased);
 
 	PlayerInputComponent->BindAction(TEXT( "ActionCrouch" ), IE_Pressed , this , &ATPSPlayer::OnActionCrouched);
+
+	PlayerInputComponent->BindAction( TEXT( "DiveRoll" ) , IE_Pressed , this , &ATPSPlayer::OnActionDiveRoll );
+
 }
 
 void ATPSPlayer::Move()
@@ -296,5 +299,24 @@ void ATPSPlayer::OnActionCrouched()
 		GetCharacterMovement()->Crouch();
 		isCrouched = true;
 	}
+}
+
+void ATPSPlayer::OnActionDiveRoll()
+{
+	// 액션을 하고 0.8초 동안은 막고싶다.
+	double Seconds = FPlatformTime::Seconds();
+	int64 curMilSec = static_cast<int64>(Seconds * 1000);
+
+	// 정적변수
+	static int64 milliseconds = 0;
+
+	// 만약 현재시간과 기억하고있던 시간의 차이가 800ms 을 초과한다면 몽타주를 재생하고싶다.
+	
+	if (curMilSec - milliseconds > 800)
+	{
+		milliseconds = curMilSec;
+		this->PlayAnimMontage( diveRollMontage );
+	}
+
 }
 

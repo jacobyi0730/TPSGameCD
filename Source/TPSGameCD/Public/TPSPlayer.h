@@ -104,4 +104,12 @@ public:
 	void OnActionRunReleased();
 
 	void OnActionCrouched();
+
+	void OnActionDiveRoll();
+
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* diveRollMontage;
+
+
 };
+
