@@ -3,6 +3,8 @@
 
 #include "Enemy.h"
 #include "EnemyFSMComp.h"
+#include "Components/WidgetComponent.h"
+#include "EnemyHPWidget.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -22,6 +24,14 @@ AEnemy::AEnemy()
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0,0,-90), FRotator(0,-90,0));
 		GetMesh()->SetRelativeScale3D(FVector(0.8f));
 	}
+
+	// healthUI를 만들어서 루트에 붙이고싶다.
+	healthUI = CreateDefaultSubobject<UWidgetComponent>(TEXT("healthUI"));
+
+	healthUI->SetupAttachment( RootComponent );
+	// Loc : 0, 0, 100
+	healthUI->SetRelativeLocation( FVector(0, 0, 100) );
+
 }
 
 // Called when the game starts or when spawned
@@ -29,6 +39,8 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	enemyHP = Cast<UEnemyHPWidget>( healthUI->GetWidget() );
+
 }
 
 // Called every frame
@@ -47,5 +59,7 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AEnemy::OnMyTakeDamage( int damage )
 {
 	enemyFSM->TakeDamage( damage );
+
+	enemyHP->SetHP( hp, maxHP );
 }
 

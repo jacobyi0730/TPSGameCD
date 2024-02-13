@@ -35,5 +35,15 @@ public:
 	void OnMyTakeDamage( int damage );
 
 	UPROPERTY(EditAnywhere)
-	int32 hp = 2;
+	int32 maxHP = 2;
+
+	UPROPERTY(EditAnywhere)
+	int32 hp = maxHP;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UWidgetComponent* healthUI;
+
+	UPROPERTY()
+	class UEnemyHPWidget* enemyHP;
+
 };
