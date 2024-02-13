@@ -49,6 +49,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	class AEnemy* me;
 
+	// 리플렉션, 직렬화, 스마트포인터
+	UPROPERTY()
+	class UEnemyAnim* enemyAnim;
+
 
 
 	void TickIdle();
@@ -60,9 +64,15 @@ public:
 	// 현재시간
 	float currentTime;
 	// 공격대기시간
-	float attackWaitTime = 1;
+	UPROPERTY(EditDefaultsOnly)
+	float attackWaitTime = 2;
 
 	void TakeDamage( int damage );
 
 	void SetState(EEnemyState next);
+
+
+	// 몽타주 파일을 로드하고싶다.
+	UPROPERTY(EditDefaultsOnly)
+	class UAnimMontage* enemyMontage;
 };

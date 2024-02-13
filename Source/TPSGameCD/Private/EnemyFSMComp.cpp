@@ -4,6 +4,7 @@
 #include "EnemyFSMComp.h"
 #include "Enemy.h"
 #include "Components/CapsuleComponent.h"
+#include "EnemyAnim.h"
 
 // Sets default values for this component's properties
 UEnemyFSMComp::UEnemyFSMComp()
@@ -24,6 +25,7 @@ void UEnemyFSMComp::BeginPlay()
 	// 내 본체를 기억하고싶다.
 	me = Cast<AEnemy>( GetOwner() );
 
+	enemyAnim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
 }
 
 
@@ -69,6 +71,7 @@ void UEnemyFSMComp::TickMove()
 	{
 		// 4. 공격상태로 전이하고싶다.
 		SetState( EEnemyState::ATTACK );
+		enemyAnim->bAttack = true;
 	}
 }
 
@@ -92,23 +95,22 @@ void UEnemyFSMComp::TickAttack()
 		else // 7. 그렇지 않다면
 		{
 			// 8.   공격을 하고싶다.
-			UE_LOG( LogTemp , Warning , TEXT( "Enemy->Player Attack!!!" ) );
-			GEngine->AddOnScreenDebugMessage( -1 , 3 , FColor::Cyan , TEXT( "Enemy->Player Attack!!!" ) );
+			enemyAnim->bAttack = true;
 		}
 	}
 }
 
 void UEnemyFSMComp::TickDamage()
 {
-	// 시간이 흐르다가
-	currentTime += GetWorld()->GetDeltaSeconds();
-	// 현재시간이 1초가 되면 
-	if (currentTime > 1)
-	{
-		// 이동상태로 전이하고싶다.
-		SetState( EEnemyState::MOVE );
-		me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::QueryAndPhysics );
-	}
+	//// 시간이 흐르다가
+	//currentTime += GetWorld()->GetDeltaSeconds();
+	//// 현재시간이 1초가 되면 
+	//if (currentTime > 1)
+	//{
+	//	// 이동상태로 전이하고싶다.
+	//	SetState( EEnemyState::MOVE );
+	//	me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::QueryAndPhysics );
+	//}
 }
 
 void UEnemyFSMComp::TickDie()
@@ -141,11 +143,17 @@ void UEnemyFSMComp::TakeDamage( int damage )
 	if (me->hp > 0)
 	{
 		SetState( EEnemyState::DAMAGE );
+		// 데미지 애니메이션 몽타주 재생
+		int index = FMath::RandRange(0, 1);
+		FString sectionName = FString::Printf( TEXT( "Damage%d" ), index ) ;
+		me->PlayAnimMontage( enemyMontage, 1, FName(*sectionName) );
 	}
 	// 그렇지않다면(체력이 0이하라면) Die상태로 전이하고싶다.
 	else
 	{
 		SetState( EEnemyState::DIE );
+		// 죽음 애니메이션 몽타주 재생
+		me->PlayAnimMontage( enemyMontage, 1, TEXT("Die") );
 	}
 	// 충돌체를 끄고싶다.
 	me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::NoCollision );
