@@ -54,12 +54,18 @@ public:
 	class UEnemyAnim* enemyAnim;
 
 
-
+private:
 	void TickIdle();
 	void TickMove();
 	void TickAttack();
 	void TickDamage();
 	void TickDie();
+
+public:
+	void DoDamageEnd();
+
+	// 죽음 애니메이션 종료 여부를 체크하기 위한 플래그 변수
+	bool isDieDone;
 
 	// 현재시간
 	float currentTime;

@@ -115,6 +115,10 @@ void UEnemyFSMComp::TickDamage()
 
 void UEnemyFSMComp::TickDie()
 {
+	// 만약 죽음 애니메이션이 끝났다면
+	if (false == isDieDone)
+		return;
+
 	// 아래로 이동하고싶다.
 	float deltaTime = GetWorld()->GetDeltaSeconds();
 	FVector P0 = me->GetActorLocation();
@@ -129,6 +133,13 @@ void UEnemyFSMComp::TickDie()
 		// 스스로 파괴하고싶다.
 		me->Destroy();
 	}
+}
+
+void UEnemyFSMComp::DoDamageEnd()
+{
+	// 이동상태로 전이하고싶다.
+	SetState( EEnemyState::MOVE );
+	me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::QueryAndPhysics );
 }
 
 void UEnemyFSMComp::TakeDamage( int damage )
@@ -154,6 +165,7 @@ void UEnemyFSMComp::TakeDamage( int damage )
 		SetState( EEnemyState::DIE );
 		// 죽음 애니메이션 몽타주 재생
 		me->PlayAnimMontage( enemyMontage, 1, TEXT("Die") );
+		isDieDone = false;
 	}
 	// 충돌체를 끄고싶다.
 	me->GetCapsuleComponent()->SetCollisionEnabled( ECollisionEnabled::NoCollision );

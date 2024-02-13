@@ -30,10 +30,10 @@ void UEnemyAnim::AnimNotify_AttackEnd()
 
 void UEnemyAnim::AnimNotify_DamageEnd()
 {
-
+	enemyFSM->DoDamageEnd();
 }
 
 void UEnemyAnim::AnimNotify_DieEnd()
 {
-
+	enemyFSM->isDieDone = true;
 }
