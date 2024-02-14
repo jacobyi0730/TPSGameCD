@@ -5,6 +5,9 @@
 #include "Enemy.h"
 #include "Components/CapsuleComponent.h"
 #include "EnemyAnim.h"
+#include "AIController.h"
+#include "NavigationSystem.h"
+
 
 // Sets default values for this component's properties
 UEnemyFSMComp::UEnemyFSMComp()
@@ -26,6 +29,11 @@ void UEnemyFSMComp::BeginPlay()
 	me = Cast<AEnemy>( GetOwner() );
 
 	enemyAnim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
+
+	ai = Cast<AAIController>( me->GetController() );
+
+	GetRandomChasePoint( chaseRadius , chasePoint );
+
 }
 
 
@@ -60,10 +68,44 @@ void UEnemyFSMComp::TickIdle()
 // Move : 목적지를 향해 이동하고싶다. 만약 목적지와의 거리가 3M이내라면 공격상태로 전이하고싶다.
 void UEnemyFSMComp::TickMove()
 {
+	// 순찰 Patrol
+	// 추적 Chase
+	FVector destination = target->GetActorLocation();
+
+	// 추적할 대상을 길찾기를 하고싶다.
+	auto ns = UNavigationSystemV1::GetNavigationSystem( GetWorld() );
+	FAIMoveRequest req;
+	req.SetAcceptanceRadius( 50 );
+	req.SetGoalLocation( destination );
+	FPathFindingQuery query;
+	ai->BuildPathfindingQuery( req , query );
+	FPathFindingResult r = ns->FindPathSync( query );
+	// 만약 목적지가 길 위라면
+	if (r.Result == ENavigationQueryResult::Success )
+	{
+		// (추적) AI가 목적지를 향해 이동하게 하고싶다.
+		ai->MoveToLocation( destination , 50 );
+	}
+	// 그렇지 않다면
+	else
+	{
+		// (순찰) 랜덤한 위치를 향해 이동
+		EPathFollowingRequestResult::Type chaseResult = ai->MoveToLocation( chasePoint , 50 );
+
+		if (chaseResult == EPathFollowingRequestResult::AlreadyAtGoal ||
+			chaseResult == EPathFollowingRequestResult::Failed)
+		{
+			GetRandomChasePoint( chaseRadius , chasePoint );
+		}
+	}
+
 	// 0. 목적지를 향하는 방향을 구하고싶다.
-	FVector dir = target->GetActorLocation() - me->GetActorLocation();
+	//FVector dir = target->GetActorLocation() - me->GetActorLocation();
 	// 1. me가 그 방향으로 이동하게 하고싶다.
-	me->AddMovementInput( dir.GetSafeNormal() );
+	//me->AddMovementInput( dir.GetSafeNormal() );
+	
+	
+	
 	// 2. 목적지와의 거리를 기억하고싶다.
 	float dist = target->GetDistanceTo( me );
 	// 3. 만약 목적지와의 거리가 attackDist보다 작다면
@@ -175,5 +217,17 @@ void UEnemyFSMComp::SetState( EEnemyState next )
 {
 	state = next;
 	currentTime = 0;
+}
+
+bool UEnemyFSMComp::GetRandomChasePoint(float radius, FVector& outLoc)
+{
+	auto ns = UNavigationSystemV1::GetNavigationSystem( GetWorld() );
+	FNavLocation loc;
+	bool result = ns->GetRandomReachablePointInRadius( me->GetActorLocation() , radius , loc );
+	if (result)
+	{
+		outLoc = loc.Location;
+	}
+	return result;
 }
 

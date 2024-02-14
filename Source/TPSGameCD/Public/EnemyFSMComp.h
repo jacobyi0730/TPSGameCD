@@ -81,4 +81,14 @@ public:
 	// 몽타주 파일을 로드하고싶다.
 	UPROPERTY(EditDefaultsOnly)
 	class UAnimMontage* enemyMontage;
+
+	UPROPERTY()
+	class AAIController* ai;
+
+	FVector chasePoint;
+
+	UPROPERTY(EditDefaultsOnly)
+	float chaseRadius = 500;
+
+	bool GetRandomChasePoint( float radius , FVector& outLoc );
 };

@@ -40,7 +40,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 hp = maxHP;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	class UWidgetComponent* healthUI;
 
 	UPROPERTY()

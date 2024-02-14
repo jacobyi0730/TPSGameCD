@@ -47,6 +47,13 @@ void AEnemy::BeginPlay()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	// healthUI를 Billboard 처리하고싶다.
+	// 카메라의 방향을 구해서 그 방향으로 회전하고싶다.
+	FVector camLoc = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
+	FVector dir = camLoc - healthUI->GetComponentLocation();
+	dir.Normalize();
+	
+	healthUI->SetWorldRotation( dir.ToOrientationRotator() );
 }
 
 // Called to bind functionality to input
