@@ -7,6 +7,7 @@
 #include "EnemyAnim.h"
 #include "AIController.h"
 #include "NavigationSystem.h"
+#include "Navigation/PathFollowingComponent.h"
 
 
 // Sets default values for this component's properties
