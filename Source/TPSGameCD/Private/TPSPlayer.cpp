@@ -13,6 +13,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Enemy.h"
 #include "EnemyFSMComp.h"
+#include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/EnhancedInputSubsystems.h"
+#include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/EnhancedInputComponent.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -91,6 +93,18 @@ void ATPSPlayer::BeginPlay()
 	sniperUI->SetVisibility( ESlateVisibility::Hidden );
 
 	OnActionChooseGrenadeGun();
+
+	APlayerController* controller = Cast<APlayerController>( Controller );
+	if (controller)
+	{
+		auto subSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>( controller->GetLocalPlayer() );
+
+		if (subSystem)
+		{
+			subSystem->ClearAllMappings();
+			subSystem->AddMappingContext( imcMapping, 0 );
+		}
+	}
 }
 
 // Called every frame
@@ -107,13 +121,14 @@ void ATPSPlayer::Tick( float DeltaTime )
 void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponent )
 {
 	Super::SetupPlayerInputComponent( PlayerInputComponent );
-
 	// 가로축, 세로축, 점프에대한 함수를 바인딩 하고싶다.
 
-	// 주어->기능(필요한 값)
-	PlayerInputComponent->BindAxis( TEXT( "Move Forward / Backward" ) , this , &ATPSPlayer::OnAxisVertical );
+	UEnhancedInputComponent* input = CastChecked<UEnhancedInputComponent>( PlayerInputComponent );
 
-	PlayerInputComponent->BindAxis( TEXT( "Move Right / Left" ) , this , &ATPSPlayer::OnAxisHorizontal );
+	if (input)
+	{
+		input->BindAction( iaMove , ETriggerEvent::Triggered , this , &ATPSPlayer::OnIAMove );
+	}
 
 	PlayerInputComponent->BindAxis( TEXT( "Turn Right / Left Mouse" ) , this , &ATPSPlayer::OnAxisTurnYaw );
 
@@ -142,20 +157,19 @@ void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponen
 
 }
 
+void ATPSPlayer::OnIAMove( const FInputActionValue& value )
+{
+	FVector2D vector2D = value.Get<FVector2D>();
+	direction.X = vector2D.X; // 앞뒤
+	direction.Y = vector2D.Y; // 좌우
+}
+
 void ATPSPlayer::Move()
 {
 	FTransform trans = GetActorTransform();
 	AddMovementInput( trans.TransformVector( direction ) );
-}
 
-void ATPSPlayer::OnAxisVertical( float value )
-{
-	direction.X = value;
-}
-
-void ATPSPlayer::OnAxisHorizontal( float value )
-{
-	direction.Y = value;
+	direction = FVector::ZeroVector;
 }
 
 void ATPSPlayer::OnAxisTurnYaw( float value )

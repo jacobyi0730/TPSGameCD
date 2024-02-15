@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/InputActionValue.h"
 #include "TPSPlayer.generated.h"
 
 UCLASS()
@@ -34,10 +35,15 @@ public:
 
 	FVector direction;
 
-	void Move();
+	UPROPERTY(EditDefaultsOnly)
+	class UInputMappingContext* imcMapping;
 
-	void OnAxisVertical(float value);
-	void OnAxisHorizontal(float value);
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaMove;
+
+	void OnIAMove(const FInputActionValue& value);
+
+	void Move();
 
 	void OnAxisTurnYaw(float value);		// Yaw
 	void OnAxisLookupPitch(float value);	// Pitch
