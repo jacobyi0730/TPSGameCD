@@ -41,14 +41,50 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	class UInputAction* iaMove;
 
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaLook;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaJump;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaFire;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaChooseGun;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaChooseSniper;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaZoom;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaRun;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaCrouch;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* iaDiveRoll;
+
 	void OnIAMove(const FInputActionValue& value);
+	void OnIALook( const FInputActionValue& value );
+	void OnIAJump( const FInputActionValue& value );
+	void OnIAFire( const FInputActionValue& value );
+	void OnIAChooseGun( const FInputActionValue& value );
+	void OnIAChooseSniper( const FInputActionValue& value );
+	void OnIAZoomIn( const FInputActionValue& value );
+	void OnIAZoomOut( const FInputActionValue& value );
+	void OnIARun( const FInputActionValue& value );
+	void OnIAWalk( const FInputActionValue& value );
+	void OnIACrouch( const FInputActionValue& value );
+	void OnIADiveRoll( const FInputActionValue& value );
+
 
 	void Move();
 
-	void OnAxisTurnYaw(float value);		// Yaw
-	void OnAxisLookupPitch(float value);	// Pitch
 
-	void OnActionJump();
 
 
 	// 총 메시를 추가하고싶다.
@@ -64,10 +100,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ABulletActor> bulletFactory;
 
-	void OnActionFire();
-
-	void OnActionChooseGrenadeGun();
-	void OnActionChooseSniperGun();
 
 public:
 	UPROPERTY( EditAnywhere )
@@ -87,8 +119,6 @@ public:
 
 	void Zoom();
 
-	void OnActionZoomIn();
-	void OnActionZoomOut();
 
 	/// <summary> true : sniper, false : grenade </summary>
 	bool bChooseSniperGun = false;	
@@ -106,12 +136,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USoundBase* fireSFX;
 
-	void OnActionRunPressed();
-	void OnActionRunReleased();
-
-	void OnActionCrouched();
-
-	void OnActionDiveRoll();
 
 	UPROPERTY(EditAnywhere)
 	class UAnimMontage* diveRollMontage;

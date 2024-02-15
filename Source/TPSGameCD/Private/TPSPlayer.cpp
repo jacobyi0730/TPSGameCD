@@ -92,7 +92,7 @@ void ATPSPlayer::BeginPlay()
 	// 태어날 때 crossHiarUI만 보이게하고싶다.
 	sniperUI->SetVisibility( ESlateVisibility::Hidden );
 
-	OnActionChooseGrenadeGun();
+	OnIAChooseGun(FInputActionValue());
 
 	APlayerController* controller = Cast<APlayerController>( Controller );
 	if (controller)
@@ -128,66 +128,46 @@ void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponen
 	if (input)
 	{
 		input->BindAction( iaMove , ETriggerEvent::Triggered , this , &ATPSPlayer::OnIAMove );
+
+		input->BindAction( iaLook , ETriggerEvent::Triggered , this , &ATPSPlayer::OnIALook);
+		input->BindAction( iaJump , ETriggerEvent::Started , this , &ATPSPlayer::OnIAJump);
+		input->BindAction( iaFire , ETriggerEvent::Started , this , &ATPSPlayer::OnIAFire);
+		input->BindAction( iaChooseGun , ETriggerEvent::Started , this , &ATPSPlayer::OnIAChooseGun);
+		input->BindAction( iaChooseSniper , ETriggerEvent::Started , this , &ATPSPlayer::OnIAChooseSniper);
+		input->BindAction( iaZoom , ETriggerEvent::Started , this , &ATPSPlayer::OnIAZoomIn);
+		input->BindAction( iaZoom , ETriggerEvent::Completed , this , &ATPSPlayer::OnIAZoomOut);
+
+		input->BindAction( iaRun , ETriggerEvent::Started , this , &ATPSPlayer::OnIARun );
+		input->BindAction( iaRun , ETriggerEvent::Completed , this , &ATPSPlayer::OnIAWalk );
+
+		input->BindAction( iaCrouch , ETriggerEvent::Started , this , &ATPSPlayer::OnIACrouch );
+		input->BindAction( iaDiveRoll , ETriggerEvent::Started , this , &ATPSPlayer::OnIADiveRoll );
+
 	}
 
-	PlayerInputComponent->BindAxis( TEXT( "Turn Right / Left Mouse" ) , this , &ATPSPlayer::OnAxisTurnYaw );
-
-	PlayerInputComponent->BindAxis( TEXT( "Look Up / Down Mouse" ) , this , &ATPSPlayer::OnAxisLookupPitch );
-
-	PlayerInputComponent->BindAction( TEXT( "Jump" ) , IE_Pressed , this , &ATPSPlayer::OnActionJump );
-
-	PlayerInputComponent->BindAction( TEXT( "Fire" ) , IE_Pressed , this , &ATPSPlayer::OnActionFire );
-
-	PlayerInputComponent->BindAction( TEXT( "ChooseGrenadeGun" ) , IE_Pressed , this , &ATPSPlayer::OnActionChooseGrenadeGun );
-
-	PlayerInputComponent->BindAction( TEXT( "ChooseSniperGun" ) , IE_Pressed , this , &ATPSPlayer::OnActionChooseSniperGun );
-
-
-	PlayerInputComponent->BindAction( TEXT( "Zoom" ) , IE_Pressed , this , &ATPSPlayer::OnActionZoomIn );
-
-	PlayerInputComponent->BindAction( TEXT( "Zoom" ) , IE_Released , this , &ATPSPlayer::OnActionZoomOut );
-
-
-	PlayerInputComponent->BindAction(TEXT( "ActionRun" ), IE_Pressed , this , &ATPSPlayer::OnActionRunPressed);
-	PlayerInputComponent->BindAction(TEXT( "ActionRun" ), IE_Released , this , &ATPSPlayer::OnActionRunReleased);
-
-	PlayerInputComponent->BindAction(TEXT( "ActionCrouch" ), IE_Pressed , this , &ATPSPlayer::OnActionCrouched);
-
-	PlayerInputComponent->BindAction( TEXT( "DiveRoll" ) , IE_Pressed , this , &ATPSPlayer::OnActionDiveRoll );
 
 }
 
 void ATPSPlayer::OnIAMove( const FInputActionValue& value )
 {
-	FVector2D vector2D = value.Get<FVector2D>();
-	direction.X = vector2D.X; // 앞뒤
-	direction.Y = vector2D.Y; // 좌우
+	FVector2D vec = value.Get<FVector2D>();
+	direction.X = vec.X; // 앞뒤
+	direction.Y = vec.Y; // 좌우
 }
 
-void ATPSPlayer::Move()
+void ATPSPlayer::OnIALook( const FInputActionValue& value )
 {
-	FTransform trans = GetActorTransform();
-	AddMovementInput( trans.TransformVector( direction ) );
-
-	direction = FVector::ZeroVector;
+	FVector2D vec = value.Get<FVector2D>();
+	AddControllerYawInput( vec.X );
+	AddControllerPitchInput( vec.Y );
 }
 
-void ATPSPlayer::OnAxisTurnYaw( float value )
-{
-	AddControllerYawInput( value );
-}
-
-void ATPSPlayer::OnAxisLookupPitch( float value )
-{
-	AddControllerPitchInput( value );
-}
-
-void ATPSPlayer::OnActionJump()
+void ATPSPlayer::OnIAJump( const FInputActionValue& value )
 {
 	Jump();
 }
 
-void ATPSPlayer::OnActionFire()
+void ATPSPlayer::OnIAFire( const FInputActionValue& value )
 {
 	// 총소리를 내고싶다.
 	UGameplayStatics::PlaySound2D( GetWorld() , fireSFX );
@@ -241,17 +221,17 @@ void ATPSPlayer::OnActionFire()
 	}
 }
 
-void ATPSPlayer::OnActionChooseGrenadeGun()
+void ATPSPlayer::OnIAChooseGun( const FInputActionValue& value )
 {
 	bChooseSniperGun = false;
 	// 유탄총을 보이게, 스나이퍼를 안보이게
 	gunMeshComp->SetVisibility( true );
 	sniperMeshComp->SetVisibility( false );
 	// 총을 교체하면 ZoomOut을 하고싶다.
-	OnActionZoomOut();
+	OnIAZoomOut(FInputActionValue());
 }
 
-void ATPSPlayer::OnActionChooseSniperGun()
+void ATPSPlayer::OnIAChooseSniper( const FInputActionValue& value )
 {
 	bChooseSniperGun = true;
 	// 유탄총을 안보이게, 스나이퍼를 보이게
@@ -259,13 +239,7 @@ void ATPSPlayer::OnActionChooseSniperGun()
 	sniperMeshComp->SetVisibility( true );
 }
 
-void ATPSPlayer::Zoom()
-{
-	// 선형보간을 이용해서 현재 FOV를 targetFOV값에 근접하게 하고싶다.
-	cameraComp->FieldOfView = FMath::Lerp<float>( cameraComp->FieldOfView , targetFOV , GetWorld()->GetDeltaSeconds() * 10 );
-}
-
-void ATPSPlayer::OnActionZoomIn()
+void ATPSPlayer::OnIAZoomIn( const FInputActionValue& value )
 {
 	// 만약 손에 쥔 총이 스나이퍼가 아니라면 함수를 바로 종료하고싶다.
 	if (false == bChooseSniperGun)
@@ -279,7 +253,7 @@ void ATPSPlayer::OnActionZoomIn()
 	targetFOV = 30;
 }
 
-void ATPSPlayer::OnActionZoomOut()
+void ATPSPlayer::OnIAZoomOut( const FInputActionValue& value )
 {
 	// ZoomOut을 하면 crossHiarUI를 보이게, sniperUI보이지않게 하고싶다.
 	crossHairUI->SetVisibility( ESlateVisibility::Visible );
@@ -287,19 +261,19 @@ void ATPSPlayer::OnActionZoomOut()
 	targetFOV = 90;
 }
 
-void ATPSPlayer::OnActionRunPressed()
+void ATPSPlayer::OnIARun( const FInputActionValue& value )
 {
 	// 걷기의 최대 speed를 1200으로 하고싶다.
 	GetCharacterMovement()->MaxWalkSpeed = 1200;
 }
 
-void ATPSPlayer::OnActionRunReleased()
+void ATPSPlayer::OnIAWalk( const FInputActionValue& value )
 {
 	// 걷기의 최대 speed를 600으로 하고싶다.
 	GetCharacterMovement()->MaxWalkSpeed = 600;
 }
 
-void ATPSPlayer::OnActionCrouched()
+void ATPSPlayer::OnIACrouch( const FInputActionValue& value )
 {
 	if (isCrouched)
 	{
@@ -315,7 +289,7 @@ void ATPSPlayer::OnActionCrouched()
 	}
 }
 
-void ATPSPlayer::OnActionDiveRoll()
+void ATPSPlayer::OnIADiveRoll( const FInputActionValue& value )
 {
 	// 액션을 하고 0.8초 동안은 막고싶다.
 	double Seconds = FPlatformTime::Seconds();
@@ -325,12 +299,26 @@ void ATPSPlayer::OnActionDiveRoll()
 	static int64 milliseconds = 0;
 
 	// 만약 현재시간과 기억하고있던 시간의 차이가 800ms 을 초과한다면 몽타주를 재생하고싶다.
-	
+
 	if (curMilSec - milliseconds > 800)
 	{
 		milliseconds = curMilSec;
 		this->PlayAnimMontage( diveRollMontage );
 	}
+}
 
+void ATPSPlayer::Move()
+{
+	FTransform trans = GetActorTransform();
+	AddMovementInput( trans.TransformVector( direction ) );
+
+	direction = FVector::ZeroVector;
+}
+
+
+void ATPSPlayer::Zoom()
+{
+	// 선형보간을 이용해서 현재 FOV를 targetFOV값에 근접하게 하고싶다.
+	cameraComp->FieldOfView = FMath::Lerp<float>( cameraComp->FieldOfView , targetFOV , GetWorld()->GetDeltaSeconds() * 10 );
 }
 
