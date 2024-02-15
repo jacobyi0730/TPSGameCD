@@ -4,6 +4,7 @@
 #include "TPSPlayerAnim.h"
 #include "TPSPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TPSPlayerMoveComp.h"
 
 void UTPSPlayerAnim::NativeUpdateAnimation( float DeltaSeconds )
 {
@@ -22,7 +23,7 @@ void UTPSPlayerAnim::NativeUpdateAnimation( float DeltaSeconds )
 	direction = FVector::DotProduct( v , right );
 	// 4. isInAir, isCrouched를 채우고싶다.
 	isInAir = player->GetCharacterMovement()->IsFalling();
-	isCrouched = player->isCrouched;
+	isCrouched = player->moveComp->isCrouched;
 	// 5. 오너의 aim rotation값을 가져와서 pitch를 채우고싶다.
 	pitch = player->GetBaseAimRotation().Pitch;
 }

@@ -15,6 +15,8 @@
 #include "EnemyFSMComp.h"
 #include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/EnhancedInputComponent.h"
+#include "TPSPlayerMoveComp.h"
+#include "TPSPlayerFireComp.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -77,6 +79,11 @@ ATPSPlayer::ATPSPlayer()
 
 	gunMeshComp->SetCollisionEnabled( ECollisionEnabled::NoCollision );
 	sniperMeshComp->SetCollisionEnabled( ECollisionEnabled::NoCollision );
+
+
+	// 이동, 총쏘기 컴포넌트를 생성하고싶다.
+	moveComp = CreateDefaultSubobject<UTPSPlayerMoveComp>( TEXT( "moveComp" ) );
+	fireComp = CreateDefaultSubobject<UTPSPlayerFireComp>( TEXT( "fireComp" ) );
 }
 
 void ATPSPlayer::BeginPlay()
@@ -113,7 +120,7 @@ void ATPSPlayer::Tick( float DeltaTime )
 	Super::Tick( DeltaTime );
 	Zoom();
 
-	Move();
+
 
 }
 
@@ -127,45 +134,21 @@ void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponen
 
 	if (input)
 	{
-		input->BindAction( iaMove , ETriggerEvent::Triggered , this , &ATPSPlayer::OnIAMove );
 
-		input->BindAction( iaLook , ETriggerEvent::Triggered , this , &ATPSPlayer::OnIALook);
-		input->BindAction( iaJump , ETriggerEvent::Started , this , &ATPSPlayer::OnIAJump);
+
 		input->BindAction( iaFire , ETriggerEvent::Started , this , &ATPSPlayer::OnIAFire);
 		input->BindAction( iaChooseGun , ETriggerEvent::Started , this , &ATPSPlayer::OnIAChooseGun);
 		input->BindAction( iaChooseSniper , ETriggerEvent::Started , this , &ATPSPlayer::OnIAChooseSniper);
 		input->BindAction( iaZoom , ETriggerEvent::Started , this , &ATPSPlayer::OnIAZoomIn);
 		input->BindAction( iaZoom , ETriggerEvent::Completed , this , &ATPSPlayer::OnIAZoomOut);
 
-		input->BindAction( iaRun , ETriggerEvent::Started , this , &ATPSPlayer::OnIARun );
-		input->BindAction( iaRun , ETriggerEvent::Completed , this , &ATPSPlayer::OnIAWalk );
 
-		input->BindAction( iaCrouch , ETriggerEvent::Started , this , &ATPSPlayer::OnIACrouch );
-		input->BindAction( iaDiveRoll , ETriggerEvent::Started , this , &ATPSPlayer::OnIADiveRoll );
 
 	}
 
 
 }
 
-void ATPSPlayer::OnIAMove( const FInputActionValue& value )
-{
-	FVector2D vec = value.Get<FVector2D>();
-	direction.X = vec.X; // 앞뒤
-	direction.Y = vec.Y; // 좌우
-}
-
-void ATPSPlayer::OnIALook( const FInputActionValue& value )
-{
-	FVector2D vec = value.Get<FVector2D>();
-	AddControllerYawInput( vec.X );
-	AddControllerPitchInput( vec.Y );
-}
-
-void ATPSPlayer::OnIAJump( const FInputActionValue& value )
-{
-	Jump();
-}
 
 void ATPSPlayer::OnIAFire( const FInputActionValue& value )
 {
@@ -261,59 +244,7 @@ void ATPSPlayer::OnIAZoomOut( const FInputActionValue& value )
 	targetFOV = 90;
 }
 
-void ATPSPlayer::OnIARun( const FInputActionValue& value )
-{
-	// 걷기의 최대 speed를 1200으로 하고싶다.
-	GetCharacterMovement()->MaxWalkSpeed = 1200;
-}
 
-void ATPSPlayer::OnIAWalk( const FInputActionValue& value )
-{
-	// 걷기의 최대 speed를 600으로 하고싶다.
-	GetCharacterMovement()->MaxWalkSpeed = 600;
-}
-
-void ATPSPlayer::OnIACrouch( const FInputActionValue& value )
-{
-	if (isCrouched)
-	{
-		// 이미 쪼그려있다면 서고싶다.
-		GetCharacterMovement()->UnCrouch();
-		isCrouched = false;
-	}
-	else
-	{
-		// 서있다면 쪼그리고싶다.
-		GetCharacterMovement()->Crouch();
-		isCrouched = true;
-	}
-}
-
-void ATPSPlayer::OnIADiveRoll( const FInputActionValue& value )
-{
-	// 액션을 하고 0.8초 동안은 막고싶다.
-	double Seconds = FPlatformTime::Seconds();
-	int64 curMilSec = static_cast<int64>(Seconds * 1000);
-
-	// 정적변수
-	static int64 milliseconds = 0;
-
-	// 만약 현재시간과 기억하고있던 시간의 차이가 800ms 을 초과한다면 몽타주를 재생하고싶다.
-
-	if (curMilSec - milliseconds > 800)
-	{
-		milliseconds = curMilSec;
-		this->PlayAnimMontage( diveRollMontage );
-	}
-}
-
-void ATPSPlayer::Move()
-{
-	FTransform trans = GetActorTransform();
-	AddMovementInput( trans.TransformVector( direction ) );
-
-	direction = FVector::ZeroVector;
-}
 
 
 void ATPSPlayer::Zoom()
