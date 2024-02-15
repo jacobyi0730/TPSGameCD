@@ -90,17 +90,6 @@ void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	crossHairUI = CreateWidget( GetWorld() , crossHairFactory );
-	crossHairUI->AddToViewport();
-
-	sniperUI = CreateWidget( GetWorld() , sniperFactory );
-	sniperUI->AddToViewport();
-
-	// 태어날 때 crossHiarUI만 보이게하고싶다.
-	sniperUI->SetVisibility( ESlateVisibility::Hidden );
-
-	OnIAChooseGun(FInputActionValue());
-
 	APlayerController* controller = Cast<APlayerController>( Controller );
 	if (controller)
 	{
@@ -118,10 +107,6 @@ void ATPSPlayer::BeginPlay()
 void ATPSPlayer::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
-	Zoom();
-
-
-
 }
 
 // Called to bind functionality to input
@@ -132,124 +117,6 @@ void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponen
 
 	UEnhancedInputComponent* input = CastChecked<UEnhancedInputComponent>( PlayerInputComponent );
 
-	if (input)
-	{
-
-
-		input->BindAction( iaFire , ETriggerEvent::Started , this , &ATPSPlayer::OnIAFire);
-		input->BindAction( iaChooseGun , ETriggerEvent::Started , this , &ATPSPlayer::OnIAChooseGun);
-		input->BindAction( iaChooseSniper , ETriggerEvent::Started , this , &ATPSPlayer::OnIAChooseSniper);
-		input->BindAction( iaZoom , ETriggerEvent::Started , this , &ATPSPlayer::OnIAZoomIn);
-		input->BindAction( iaZoom , ETriggerEvent::Completed , this , &ATPSPlayer::OnIAZoomOut);
-
-
-
-	}
-
-
+	moveComp->SetupInput( input );
+	fireComp->SetupInput( input );
 }
-
-
-void ATPSPlayer::OnIAFire( const FInputActionValue& value )
-{
-	// 총소리를 내고싶다.
-	UGameplayStatics::PlaySound2D( GetWorld() , fireSFX );
-	// 움찔 애니를 하고싶다.
-	this->PlayAnimMontage( fireMontage );
-
-	// 만약 스나이퍼가 아니라면
-	if (false == bChooseSniperGun)
-	{
-		FTransform t = gunMeshComp->GetSocketTransform( TEXT( "FirePosition" ) );
-		GetWorld()->SpawnActor<ABulletActor>( bulletFactory , t );
-	}
-	// 그렇지 않다면 LineTrace...
-	else
-	{
-		FHitResult outHit;
-		FVector start = cameraComp->GetComponentLocation();
-		FVector end = start + cameraComp->GetForwardVector() * 100000;
-		FCollisionQueryParams params;
-		params.AddIgnoredActor( this );
-
-		bool bReturnValue = GetWorld()->LineTraceSingleByChannel( outHit , start , end , ECollisionChannel::ECC_Visibility , params );
-
-		// 만약 부딪힌 것이 있다면
-		if (bReturnValue)
-		{
-			DrawDebugLine( GetWorld() , outHit.TraceStart , outHit.ImpactPoint , FColor::Red , false , 10 );
-			// 부딪힌 컴포넌트를 가져와서
-			UPrimitiveComponent* hitComp = outHit.GetComponent();
-			// 만약 컴포넌트가 있다 그리고 컴포넌트의 물리가 켜져있다면
-			if (hitComp && hitComp->IsSimulatingPhysics())
-			{
-				// 그 컴포넌트에게 힘을 가하고싶다.
-				FVector dir = end - start;
-				hitComp->AddForce( dir.GetSafeNormal() * 500000 * hitComp->GetMass() );
-			}
-
-			// 부딪힌 곳에 expVFX를 생성해서 배치하고싶다.
-			UGameplayStatics::SpawnEmitterAtLocation( GetWorld() , expVFX , outHit.ImpactPoint );
-
-			// 만약 부딪힌것이 AEnemy라면
-			// 적에게 데미지 1점을 주고싶다. 
-			AEnemy* enemy = Cast<AEnemy>( outHit.GetActor() );
-			if (enemy)
-			{
-				//auto fsm = Cast<UEnemyFSMComp>(enemy->GetDefaultSubobjectByName(TEXT("enemyFSM")));
-				//fsm->TakeDamage(1);
-				enemy->OnMyTakeDamage( 1 );
-			}
-		}
-	}
-}
-
-void ATPSPlayer::OnIAChooseGun( const FInputActionValue& value )
-{
-	bChooseSniperGun = false;
-	// 유탄총을 보이게, 스나이퍼를 안보이게
-	gunMeshComp->SetVisibility( true );
-	sniperMeshComp->SetVisibility( false );
-	// 총을 교체하면 ZoomOut을 하고싶다.
-	OnIAZoomOut(FInputActionValue());
-}
-
-void ATPSPlayer::OnIAChooseSniper( const FInputActionValue& value )
-{
-	bChooseSniperGun = true;
-	// 유탄총을 안보이게, 스나이퍼를 보이게
-	gunMeshComp->SetVisibility( false );
-	sniperMeshComp->SetVisibility( true );
-}
-
-void ATPSPlayer::OnIAZoomIn( const FInputActionValue& value )
-{
-	// 만약 손에 쥔 총이 스나이퍼가 아니라면 함수를 바로 종료하고싶다.
-	if (false == bChooseSniperGun)
-	{
-		return;
-	}
-
-	// ZoomIn을 하면 crossHairUI를 보이지않게, sniperUI보이게 하고싶다.
-	crossHairUI->SetVisibility( ESlateVisibility::Hidden );
-	sniperUI->SetVisibility( ESlateVisibility::Visible );
-	targetFOV = 30;
-}
-
-void ATPSPlayer::OnIAZoomOut( const FInputActionValue& value )
-{
-	// ZoomOut을 하면 crossHiarUI를 보이게, sniperUI보이지않게 하고싶다.
-	crossHairUI->SetVisibility( ESlateVisibility::Visible );
-	sniperUI->SetVisibility( ESlateVisibility::Hidden );
-	targetFOV = 90;
-}
-
-
-
-
-void ATPSPlayer::Zoom()
-{
-	// 선형보간을 이용해서 현재 FOV를 targetFOV값에 근접하게 하고싶다.
-	cameraComp->FieldOfView = FMath::Lerp<float>( cameraComp->FieldOfView , targetFOV , GetWorld()->GetDeltaSeconds() * 10 );
-}
-
