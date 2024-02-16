@@ -27,7 +27,7 @@ void UTPSPlayerFireComp::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	me = Cast<ATPSPlayer>( GetOwner() );
+	
 
 	crossHairUI = CreateWidget( GetWorld() , crossHairFactory );
 	crossHairUI->AddToViewport();
@@ -127,6 +127,7 @@ void UTPSPlayerFireComp::OnIAChooseGun( const FInputActionValue& value )
 	me->sniperMeshComp->SetVisibility( false );
 	// 총을 교체하면 ZoomOut을 하고싶다.
 	OnIAZoomOut( FInputActionValue() );
+	me->OnMyChooseGun(false);
 }
 
 void UTPSPlayerFireComp::OnIAChooseSniper( const FInputActionValue& value )
@@ -135,6 +136,7 @@ void UTPSPlayerFireComp::OnIAChooseSniper( const FInputActionValue& value )
 	// 유탄총을 안보이게, 스나이퍼를 보이게
 	me->gunMeshComp->SetVisibility( false );
 	me->sniperMeshComp->SetVisibility( true );
+	me->OnMyChooseGun( true );
 }
 
 void UTPSPlayerFireComp::OnIAZoomIn( const FInputActionValue& value )

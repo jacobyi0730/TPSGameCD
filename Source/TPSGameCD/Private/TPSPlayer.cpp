@@ -9,14 +9,14 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "BulletActor.h"
 #include "Blueprint/UserWidget.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/GameplayStatics.h"
 #include "Enemy.h"
 #include "EnemyFSMComp.h"
 #include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/EnhancedInputComponent.h"
 #include "TPSPlayerMoveComp.h"
 #include "TPSPlayerFireComp.h"
+#include "MainWidget.h"
+#include "../../../../../../../Source/Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -101,6 +101,12 @@ void ATPSPlayer::BeginPlay()
 			subSystem->AddMappingContext( imcMapping, 0 );
 		}
 	}
+
+	// mainUI를 생성해서 화면에 보이게 하고싶다.
+	mainUI = CreateWidget<UMainWidget>(GetWorld(), mainUIFactory);
+	mainUI->AddToViewport();
+
+	mainUI->UpdateHPBar( 1 , 1 );
 }
 
 // Called every frame
@@ -113,10 +119,20 @@ void ATPSPlayer::Tick( float DeltaTime )
 void ATPSPlayer::SetupPlayerInputComponent( UInputComponent* PlayerInputComponent )
 {
 	Super::SetupPlayerInputComponent( PlayerInputComponent );
-	// 가로축, 세로축, 점프에대한 함수를 바인딩 하고싶다.
 
 	UEnhancedInputComponent* input = CastChecked<UEnhancedInputComponent>( PlayerInputComponent );
 
-	moveComp->SetupInput( input );
-	fireComp->SetupInput( input );
+	setupInputDelegate.Broadcast( input );
+}
+
+void ATPSPlayer::DamageProcess( int damage , class AActor* sender )
+{
+	hp -= damage;
+	if (hp < 0)
+	{
+		hp = 0;
+		// 게임오버...
+		UGameplayStatics::SetGamePaused( GetWorld(), true );
+	}
+	mainUI->UpdateHPBar( hp , maxHP );
 }

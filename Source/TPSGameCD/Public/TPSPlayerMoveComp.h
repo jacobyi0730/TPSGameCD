@@ -5,11 +5,12 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "InputActionValue.h"
+#include "TPSPlayerBaseComp.h"
 #include "TPSPlayerMoveComp.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TPSGAMECD_API UTPSPlayerMoveComp : public UActorComponent
+class TPSGAMECD_API UTPSPlayerMoveComp : public UTPSPlayerBaseComp
 {
 	GENERATED_BODY()
 
@@ -25,10 +26,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	virtual void SetupInput( class UEnhancedInputComponent* input );
-
-	UPROPERTY()
-	class ATPSPlayer* me;
+	virtual void SetupInput( class UEnhancedInputComponent* input ) override;
 
 	UPROPERTY(EditDefaultsOnly)
 	class UInputAction* iaMove;

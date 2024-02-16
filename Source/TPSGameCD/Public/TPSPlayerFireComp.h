@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/InputActionValue.h"
+#include "TPSPlayerBaseComp.h"
 #include "TPSPlayerFireComp.generated.h"
 
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TPSGAMECD_API UTPSPlayerFireComp : public UActorComponent
+class TPSGAMECD_API UTPSPlayerFireComp : public UTPSPlayerBaseComp
 {
 	GENERATED_BODY()
 
@@ -25,13 +25,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	virtual void SetupInput( class UEnhancedInputComponent* input );
+	virtual void SetupInput( class UEnhancedInputComponent* input ) override;
 
-	UPROPERTY()
-	class ATPSPlayer* me;
-
-
-	
 	UPROPERTY(EditDefaultsOnly)
 	class UInputAction* iaFire;
 

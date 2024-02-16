@@ -7,6 +7,8 @@
 #include "../../../../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/InputActionValue.h"
 #include "TPSPlayer.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam( FSetupInputDelegate , class UEnhancedInputComponent*);
+
 UCLASS()
 class TPSGAMECD_API ATPSPlayer : public ACharacter
 {
@@ -27,6 +29,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	FSetupInputDelegate setupInputDelegate;
+
 	UPROPERTY(EditDefaultsOnly)
 	class UTPSPlayerMoveComp* moveComp;
 
@@ -39,15 +43,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UCameraComponent* cameraComp;
 
-		UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly)
 	class UInputMappingContext* imcMapping;
-
-	
-
-
-
-	
-
 	
 	// 총 메시를 추가하고싶다.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -56,16 +53,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UStaticMeshComponent* sniperMeshComp;
 
+	// 체력을 관리하고싶다.
+	int32 maxHP = 10;
 
+	UPROPERTY(EditDefaultsOnly)
+	int32 hp = maxHP;
 
-	// 이동
-	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class UMainWidget> mainUIFactory;
 
+	UPROPERTY(BlueprintReadOnly)
+	class UMainWidget* mainUI;
 
+	void DamageProcess(int damage, class AActor* sender);
 
-
-
-	// 총쏘기
-
+	// 블루프린트에서 구현하고, c++에서 호출하고싶은 함수
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnMyChooseGun(bool isSniper);
 };
 
